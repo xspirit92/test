@@ -1,0 +1,148 @@
+﻿@model List<Test.Models.Tasks>
+@using Test;
+
+@{
+    ViewBag.Title = "Тест";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Задачи</h2>
+
+<input type="text" id="task" />
+<input id="datepicker" style="width:150px;" />
+ 
+<br>
+
+<div id="tableBlock"></div>
+
+<script src="~/Scripts/kendo.web.min.js"></script>
+<script src="~/Scripts/kendo.ru-RU.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        GetTasks();
+
+        $("#task").keydown(function (event) {
+            
+            if (event.which == 13) {
+
+                var task = $('#task').val();
+                var deadline = strToDate($("#datepicker").val());
+
+                if (task) {
+
+                    var obj = { Task: task, Deadline: deadline };
+
+                    var baseUrl = '@Url.Content("~/")';
+
+                    $.ajax({
+                        url: baseUrl + 'api/task',
+                        type: 'POST',
+                        data: JSON.stringify(obj),
+                        contentType: "application/json;charset=utf-8",
+                        success: function (data) {
+                            $('#task').val(null);
+                            $('#datepicker').val(null);
+                            GetTasks();
+                        },
+                        error: function () {
+                            alert('Ошибка при сохранении');
+                        }
+                    });
+                }
+            }
+        });
+
+        $("#datepicker").keydown(function (event) {
+
+            if (event.which == 13) {
+
+                var task = $('#task').val();
+                var deadline = strToDate($("#datepicker").val());
+
+                if (task) {
+
+                    var obj = { Task: task, Deadline: deadline };
+
+                    var baseUrl = '@Url.Content("~/")';
+
+                    $.ajax({
+                        url: baseUrl + 'api/task',
+                        type: 'POST',
+                        data: JSON.stringify(obj),
+                        contentType: "application/json;charset=utf-8",
+                        success: function (data) {
+                            $('#task').val(null);
+                            $('#datepicker').val(null);
+                            GetTasks();
+                        },
+                        error: function () {
+                            alert('Ошибка при сохранении');
+                        }
+                    });
+                }
+            }
+        });
+    });
+
+    (function () {
+        $("#datepicker").kendoDatePicker({ format: "dd.MM.yyyy" });
+    })();
+
+    function GetTasks() {
+
+        var baseUrl = '@Url.Content("~/")';
+
+        $.ajax({
+            url: baseUrl + 'api/task',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                var strResult = "<table><th>Задача</th><th>Дата</th>";
+                $.each(data, function (index, task) {
+                    var cls = "";
+                    if (task.Deadline) {
+                        if (new Date(task.Deadline) <= new Date()) cls = ' class="red-row"';
+                    }
+                    strResult += "<tr" + cls + "><td>" + task.Task + "</td><td> " + DateToDMY(task.Deadline) + "</td>";
+                });
+                strResult += "</table>";
+                $("#tableBlock").html(strResult);
+            },
+            error: function () {
+                alert('Ошибка');
+            }
+        });
+    }
+
+    function DateToDMY(date_str) {
+        if (!date_str) return '';
+        var date = new Date(date_str);
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+        return lpad(day) + '.' + lpad(month) + '.' + year;
+    }
+
+    function lpad(n) {
+        if (n.toString().length == 2) return n;
+        else
+            return '0' + n;
+    }
+
+    function strToDate(str_dat) {
+        var mas = str_dat.split('.');
+        if (mas.length != 3) return null;
+            var day = parseInt(mas[0]);
+            var month = parseInt(mas[1]) - 1;
+            var year = parseInt(mas[2]);
+
+            if (day && month && year) {
+                return new Date(year, month, day);
+            }
+            else return null;
+    }
+
+</script>
+
